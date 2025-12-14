@@ -7,8 +7,7 @@ pipeline {
     }
 
     environment {
-        SONAR_HOST_URL = "http://localhost:9000"
-        SONAR_TOKEN = "sqa_9e892733c4ca24a1ae56bf05a3a9f1107ffd4238"
+        SONAR_PROJECT_KEY = 'com.devops:sonar-demo'
     }
 
     stages {
@@ -20,13 +19,13 @@ pipeline {
             }
         }
 
-        stage('Build with Maven') {
+        stage('Build') {
             steps {
                 sh 'mvn clean compile'
             }
         }
 
-        stage('Run Tests') {
+        stage('Test') {
             steps {
                 sh 'mvn test'
             }
@@ -34,30 +33,30 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                sh '''
-                mvn sonar:sonar \
-                -Dsonar.host.url=$SONAR_HOST_URL \
-                -Dsonar.login=$SONAR_TOKEN
-                '''
+                withSonarQubeEnv('SonarQube') {
+                    sh """
+                      mvn sonar:sonar \
+                      -Dsonar.projectKey=${sqa_9e892733c4ca24a1ae56bf05a3a9f1107ffd4238}
+                    """
+                }
             }
         }
-	stage('Quality Gate') {
-	    steps {
-        	timeout(time: 2, unit: 'MINUTES') {
-            	waitForQualityGate abortPipeline: true
-        		}
-    		}	
-	}	
 
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 2, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
     }
 
     post {
         success {
-            echo "Pipeline completed successfully!"
+            echo '✅ Pipeline SUCCESS – Quality Gate Passed'
         }
         failure {
-            echo "Pipeline failed. Check logs."
+            echo '❌ Pipeline FAILED – Check logs'
         }
     }
 }
-
