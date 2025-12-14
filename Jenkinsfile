@@ -2,20 +2,15 @@ pipeline {
     agent any
 
     tools {
-        jdk 'JDK21'
         maven 'Maven'
-    }
-
-    environment {
-        SONAR_PROJECT_KEY = 'com.devops:sonar-demo'
+        jdk 'JDK21'
     }
 
     stages {
 
-        stage('Checkout Code') {
+        stage('Checkout') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/SudhanshuD13/java-jenkins-sonarqube-pipeline.git'
+                checkout scm
             }
         }
 
@@ -34,10 +29,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    sh """
-                      mvn sonar:sonar \
-                      -Dsonar.projectKey=${sqa_9e892733c4ca24a1ae56bf05a3a9f1107ffd4238}
-                    """
+                    sh 'mvn sonar:sonar'
                 }
             }
         }
@@ -53,10 +45,11 @@ pipeline {
 
     post {
         success {
-            echo '✅ Pipeline SUCCESS – Quality Gate Passed'
+            echo '✅ Pipeline SUCCESS'
         }
         failure {
-            echo '❌ Pipeline FAILED – Check logs'
+            echo '❌ Pipeline FAILED'
         }
     }
 }
+
